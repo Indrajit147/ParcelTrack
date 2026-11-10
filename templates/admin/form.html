@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if row else 'Add' }} · {{ cfg.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header fw-semibold">{{ 'Edit record' if row else 'Add new' }} · {{ cfg.title }}</div>
+      <form class="card-body" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for name, label, kind, _ in cfg.fields %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ name }}">{{ label }}</label>
+          {% if kind == 'select' %}
+            <select class="form-select" id="{{ name }}" name="{{ name }}" required>
+              {% for value, text in options[name] %}
+                <option value="{{ value }}" {{ 'selected' if row and row[name] == value }}>{{ text }}</option>
+              {% endfor %}
+            </select>
+          {% elif kind == 'password' %}
+            <input class="form-control" type="password" id="{{ name }}" name="{{ name }}" minlength="6"
+                   autocomplete="new-password" {{ 'required' if not row }}>
+            {% if row %}<div class="form-text">Leave empty to keep the current password.</div>{% endif %}
+          {% else %}
+            <input class="form-control" type="{{ kind }}" id="{{ name }}" name="{{ name }}"
+                   value="{{ row[name] if row else '' }}" {% if kind == 'number' %}min="0" step="0.01"{% endif %} required>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn-brand">Save</button>
+        <a class="btn btn-link" href="{{ url_for('admin.manage', table=table) }}">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -33,10 +33,10 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Parcel history
 
 ## M6 — Admin management
-- [ ] Add, edit, remove and search branches, riders, service types and customers
-- [ ] Parcel list with search and status filter, parcel detail page
-- [ ] Assign a rider for pickup or delivery
-- [ ] Update parcel status and record payments
+- [x] Add, edit, remove and search branches, riders, service types and customers
+- [x] Parcel list with search and status filter, parcel detail page
+- [x] Assign a rider for pickup or delivery
+- [x] Update parcel status and record payments
 
 ## M7 — Rider features
 - [ ] Task list for the logged-in rider

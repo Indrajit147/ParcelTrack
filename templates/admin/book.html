@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Book parcel{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header fw-semibold">Book a parcel for a customer</div>
+      <form class="card-body" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label" for="sender_id">Sender (customer)</label>
+          <select class="form-select" id="sender_id" name="sender_id" required>
+            <option value="">Choose...</option>
+            {% for c in customers %}<option value="{{ c.customer_id }}">{{ c.full_name }} ({{ c.phone }})</option>{% endfor %}
+          </select>
+          <div class="form-text">New customer? <a href="{{ url_for('admin.edit', table='customers') }}">Add the customer first</a>.</div>
+        </div>
+        {% include '_book_form.html' %}
+        <button class="btn btn-brand">Book parcel</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

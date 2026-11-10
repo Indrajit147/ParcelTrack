@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}{{ p.tracking_no }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ p.tracking_no }}
+    <span class="badge text-bg-{{ p.current_status|badge }} fs-6">{{ p.current_status|label }}</span></h1>
+  <form method="post" action="{{ url_for('admin.parcel_delete', parcel_id=p.parcel_id) }}"
+        onsubmit="return confirm('Delete this parcel with its shipments, tracking events and payments?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-outline-danger">Delete parcel</button>
+  </form>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Parcel</div>
+      <dl class="card-body row mb-0">
+        <dt class="col-4">Sender</dt><dd class="col-8">{{ p.sender_name }} · {{ p.sender_phone }}</dd>
+        <dt class="col-4">Route</dt><dd class="col-8">{{ p.origin_branch }} → {{ p.destination_branch }}</dd>
+        <dt class="col-4">Service</dt><dd class="col-8">{{ p.service_name }}</dd>
+        <dt class="col-4">Weight</dt><dd class="col-8">{{ p.weight_kg }} kg</dd>
+        <dt class="col-4">Declared value</dt><dd class="col-8">{{ p.declared_value|money }}</dd>
+        <dt class="col-4">Charge</dt><dd class="col-8">{{ p.charge|money }}</dd>
+        <dt class="col-4">Booked</dt><dd class="col-8">{{ p.booking_date|dt }}</dd>
+        <dt class="col-4">Due</dt><dd class="col-8">{{ p.due_date|dt }}</dd>
+      </dl>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Receiver</div>
+      <form class="card-body" method="post" action="{{ url_for('admin.parcel_receiver', parcel_id=p.parcel_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row">
+          <div class="col-md-6 mb-2">
+            <label class="form-label" for="receiver_name">Name</label>
+            <input class="form-control" id="receiver_name" name="receiver_name" maxlength="100" value="{{ p.receiver_name }}" required>
+          </div>
+          <div class="col-md-6 mb-2">
+            <label class="form-label" for="receiver_phone">Phone</label>
+            <input class="form-control" id="receiver_phone" name="receiver_phone" maxlength="15" value="{{ p.receiver_phone }}" required>
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label" for="receiver_address">Address</label>
+          <input class="form-control" id="receiver_address" name="receiver_address" value="{{ p.receiver_address }}" required>
+        </div>
+        <button class="btn btn-sm btn-outline-primary">Update receiver</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold">Payments</div>
+      <table class="table mb-0">
+        <thead><tr><th>Amount</th><th>Method</th><th>Date</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for pay in payments %}
+          <tr>
+            <td>{{ pay.amount|money }}</td><td>{{ pay.payment_method|label }}</td><td>{{ pay.payment_date|dt }}</td>
+            <td><span class="badge text-bg-{{ pay.payment_status|badge }}">{{ pay.payment_status|label }}</span></td>
+            <td class="text-end">
+              {% if pay.payment_status == 'pending' %}
+              <form method="post" action="{{ url_for('admin.payment_paid', payment_id=pay.payment_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-success">Mark paid</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center text-muted">No payment recorded.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <form class="card-body border-top row g-2 align-items-end" method="post"
+            action="{{ url_for('admin.payment_add', parcel_id=p.parcel_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-4">
+          <label class="form-label" for="amount">Amount (৳)</label>
+          <input class="form-control" type="number" id="amount" name="amount" min="0.01" step="0.01" required>
+        </div>
+        <div class="col-5">
+          <label class="form-label" for="payment_method">Method</label>
+          <select class="form-select" id="payment_method" name="payment_method">
+            {% for m in methods %}<option value="{{ m }}">{{ m|label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-3"><button class="btn btn-outline-primary w-100">Record</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Rider tasks</div>
+      <table class="table mb-0">
+        <thead><tr><th>Task</th><th>Rider</th><th>Assigned</th><th>Completed</th></tr></thead>
+        <tbody>
+        {% for s in shipments %}
+          <tr><td>{{ s.task_type|label }}</td><td>{{ s.rider_name }} · {{ s.rider_phone }}</td>
+              <td>{{ s.assigned_at|dt }}</td><td>{{ s.completed_at|dt }}</td></tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No rider assigned yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if riders %}
+      <form class="card-body border-top row g-2 align-items-end" method="post"
+            action="{{ url_for('admin.parcel_assign', parcel_id=p.parcel_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-8">
+          <label class="form-label" for="rider_id">
+            {{ 'Pickup' if p.current_status == 'booked' else 'Delivery' }} rider
+            ({{ p.origin_branch if p.current_status == 'booked' else p.destination_branch }})</label>
+          <select class="form-select" id="rider_id" name="rider_id" required>
+            {% for r in riders %}
+              <option value="{{ r.rider_id }}">{{ r.full_name }} · {{ r.vehicle_type }} · {{ r.open_tasks }} open task{{ 's' if r.open_tasks != 1 }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-4"><button class="btn btn-outline-primary w-100">Assign rider</button></div>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold">Tracking history</div>
+      {% if next_statuses %}
+      <form class="card-body border-bottom row g-2 align-items-end" method="post"
+            action="{{ url_for('admin.parcel_status', parcel_id=p.parcel_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-4">
+          <label class="form-label" for="status">Next status</label>
+          <select class="form-select" id="status" name="status">
+            {% for s in next_statuses %}<option value="{{ s }}">{{ s|label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-5">
+          <label class="form-label" for="remarks">Remarks</label>
+          <input class="form-control" id="remarks" name="remarks" placeholder="Optional">
+        </div>
+        <div class="col-3"><button class="btn btn-brand w-100">Update</button></div>
+      </form>
+      {% endif %}
+      <div class="card-body">
+        <ul class="timeline mb-0">
+        {% for e in events %}
+          <li>
+            <div class="fw-semibold">{{ e.status|label }}</div>
+            <div class="text-muted small">{{ e.event_time|dt }} · {{ e.branch_name }}</div>
+            {% if e.remarks %}<div>{{ e.remarks }}</div>{% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
