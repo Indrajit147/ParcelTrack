@@ -48,5 +48,5 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Rider-wise deliveries, branch-wise parcel count, delayed deliveries, customer history
 
 ## M9 — Testing and documentation
-- [ ] Automated end-to-end test of the main flows
-- [ ] ER diagram and final README
+- [x] Automated end-to-end test of the main flows
+- [x] ER diagram and final README
