@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import customer
 import db
 from ops import NEXT_STATUS, OpError, clean
 
@@ -17,6 +18,7 @@ app = Flask(__name__)
 app.secret_key = os.environ['SECRET_KEY']
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.teardown_request(db.close_db)
+app.register_blueprint(customer.bp)
 
 HOME = {'admin': '/admin/', 'customer': '/customer/', 'rider': '/rider/'}
 

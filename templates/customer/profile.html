@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header fw-semibold">My profile</div>
+      <form class="card-body" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label" for="full_name">Full name</label>
+          <input class="form-control" id="full_name" name="full_name" maxlength="100" value="{{ customer.full_name }}" required>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-control" type="email" id="email" name="email" maxlength="120" value="{{ customer.email }}" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="phone">Phone</label>
+            <input class="form-control" id="phone" name="phone" maxlength="15" value="{{ customer.phone }}" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="address">Address</label>
+          <textarea class="form-control" id="address" name="address" rows="2" required>{{ customer.address }}</textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">New password</label>
+          <input class="form-control" type="password" id="password" name="password" minlength="6" autocomplete="new-password">
+          <div class="form-text">Leave empty to keep the current password.</div>
+        </div>
+        <button class="btn btn-brand">Save changes</button>
+        <span class="text-muted small ms-2">Member since {{ customer.created_at|dt }}</span>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -26,11 +26,11 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Base layout and home page
 
 ## M5 — Customer features
-- [ ] Register and update profile (INSERT, UPDATE)
-- [ ] Track a parcel by tracking number (SELECT with JOIN)
-- [ ] Book a parcel with automatic charge calculation (INSERT)
-- [ ] Cancel a booked parcel (DELETE)
-- [ ] Parcel history
+- [x] Register and update profile (INSERT, UPDATE)
+- [x] Track a parcel by tracking number (SELECT with JOIN)
+- [x] Book a parcel with automatic charge calculation (INSERT)
+- [x] Cancel a booked parcel (DELETE)
+- [x] Parcel history
 
 ## M6 — Admin management
 - [ ] Add, edit, remove and search branches, riders, service types and customers

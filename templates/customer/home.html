@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}My parcels{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">My parcels</h1>
+  <a class="btn btn-brand" href="{{ url_for('customer.book') }}">Book a parcel</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card card-body"><div class="text-muted small">Total parcels</div><div class="stat">{{ summary.total }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body"><div class="text-muted small">On the way</div><div class="stat">{{ summary.active }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body"><div class="text-muted small">Delivered</div><div class="stat">{{ summary.delivered }}</div></div></div>
+  <div class="col-6 col-md-3"><div class="card card-body"><div class="text-muted small">Total charge</div><div class="stat">{{ summary.spent|money }}</div></div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Tracking no.</th><th>Receiver</th><th>Route</th><th>Service</th><th>Weight</th>
+        <th>Charge</th><th>Booked</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for p in parcels %}
+        <tr>
+          <td><a href="{{ url_for('track', tracking_no=p.tracking_no) }}">{{ p.tracking_no }}</a></td>
+          <td>{{ p.receiver_name }}</td>
+          <td>{{ p.origin_branch }} → {{ p.destination_branch }}</td>
+          <td>{{ p.service_name }}</td>
+          <td>{{ p.weight_kg }} kg</td>
+          <td>{{ p.charge|money }}</td>
+          <td>{{ p.booking_date|dt }}</td>
+          <td><span class="badge text-bg-{{ p.current_status|badge }}">{{ p.current_status|label }}</span></td>
+          <td>
+            {% if p.current_status == 'booked' %}
+            <form method="post" action="{{ url_for('customer.cancel', parcel_id=p.parcel_id) }}"
+                  onsubmit="return confirm('Cancel booking {{ p.tracking_no }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger">Cancel</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">You have not booked any parcel yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

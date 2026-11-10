@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Book a parcel{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header fw-semibold">Book a parcel</div>
+      <form class="card-body" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% include '_book_form.html' %}
+        <button class="btn btn-brand">Book parcel</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

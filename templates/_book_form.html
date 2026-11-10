@@ -1,0 +1,72 @@
+{# Parcel booking fields, shared by the customer and the admin booking pages. #}
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label class="form-label" for="receiver_name">Receiver name</label>
+    <input class="form-control" id="receiver_name" name="receiver_name" maxlength="100" required>
+  </div>
+  <div class="col-md-6 mb-3">
+    <label class="form-label" for="receiver_phone">Receiver phone</label>
+    <input class="form-control" id="receiver_phone" name="receiver_phone" maxlength="15" placeholder="01XXXXXXXXX" required>
+  </div>
+</div>
+<div class="mb-3">
+  <label class="form-label" for="receiver_address">Receiver address</label>
+  <textarea class="form-control" id="receiver_address" name="receiver_address" rows="2" required></textarea>
+</div>
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <label class="form-label" for="origin_branch_id">Send from (origin branch)</label>
+    <select class="form-select" id="origin_branch_id" name="origin_branch_id" required>
+      <option value="">Choose...</option>
+      {% for b in branches %}<option value="{{ b.branch_id }}">{{ b.city }} - {{ b.branch_name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6 mb-3">
+    <label class="form-label" for="destination_branch_id">Deliver through (destination branch)</label>
+    <select class="form-select" id="destination_branch_id" name="destination_branch_id" required>
+      <option value="">Choose...</option>
+      {% for b in branches %}<option value="{{ b.branch_id }}">{{ b.city }} - {{ b.branch_name }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-4 mb-3">
+    <label class="form-label" for="service_id">Service</label>
+    <select class="form-select" id="service_id" name="service_id" required>
+      {% for s in services %}
+        <option value="{{ s.service_id }}" data-base="{{ s.base_rate }}" data-rate="{{ s.rate_per_kg }}">
+          {{ s.service_name }} ({{ s.delivery_days }} day{{ 's' if s.delivery_days > 1 }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4 mb-3">
+    <label class="form-label" for="weight_kg">Weight (kg)</label>
+    <input class="form-control" type="number" id="weight_kg" name="weight_kg" min="0.01" max="9999" step="0.01" required>
+  </div>
+  <div class="col-md-4 mb-3">
+    <label class="form-label" for="declared_value">Declared value (৳)</label>
+    <input class="form-control" type="number" id="declared_value" name="declared_value" min="0" step="0.01" value="0">
+  </div>
+</div>
+<div class="row align-items-end">
+  <div class="col-md-6 mb-3">
+    <label class="form-label" for="payment_method">Payment method</label>
+    <select class="form-select" id="payment_method" name="payment_method" required>
+      {% for m in methods %}<option value="{{ m }}">{{ m|label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="alert alert-success mb-0 py-2" aria-live="polite">Delivery charge: <strong id="charge">-</strong></div>
+  </div>
+</div>
+<script>
+  // Preview only: the real charge is calculated by the database when the parcel is saved.
+  const service = document.getElementById('service_id'), weight = document.getElementById('weight_kg');
+  function showCharge() {
+    const s = service.selectedOptions[0], w = parseFloat(weight.value);
+    document.getElementById('charge').textContent =
+      w > 0 ? '৳' + (parseFloat(s.dataset.base) + parseFloat(s.dataset.rate) * w).toFixed(2) : '-';
+  }
+  service.addEventListener('change', showCharge);
+  weight.addEventListener('input', showCharge);
+</script>
