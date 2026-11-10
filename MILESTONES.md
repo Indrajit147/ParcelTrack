@@ -9,10 +9,10 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] README with setup steps and this milestone plan
 
 ## M2 — Database schema
-- [ ] Nine tables with primary keys, foreign keys, UNIQUE and CHECK constraints
-- [ ] Sequence-based tracking number
-- [ ] Trigger that keeps `parcels.current_status` in sync with the tracking log
-- [ ] Report views (parcel details, rider deliveries, branch volume, delayed deliveries)
+- [x] Nine tables with primary keys, foreign keys, UNIQUE and CHECK constraints
+- [x] Sequence-based tracking number
+- [x] Trigger that keeps `parcels.current_status` in sync with the tracking log
+- [x] Report views (parcel details, rider deliveries, branch volume, delayed deliveries)
 
 ## M3 — Sample data
 - [ ] Branches, service types, riders, customers and an admin account
