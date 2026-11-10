@@ -15,9 +15,9 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Report views (parcel details, rider deliveries, branch volume, delayed deliveries)
 
 ## M3 — Sample data
-- [ ] Branches, service types, riders, customers and an admin account
-- [ ] Parcels in every status with matching shipments, tracking events and payments
-- [ ] Reference SQL queries (`db/queries.sql`)
+- [x] Branches, service types, riders, customers and an admin account
+- [x] Parcels in every status with matching shipments, tracking events and payments
+- [x] Reference SQL queries (`db/queries.sql`)
 
 ## M4 — Backend foundation
 - [ ] Flask app, database connection, one transaction per request
