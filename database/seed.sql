@@ -1,5 +1,5 @@
 -- ParcelTrack sample data
--- Run after schema.sql:  psql -U postgres -d parceltrack -f db/seed.sql
+-- Run after schema.sql:  psql -U postgres -d parceltrack -f database/seed.sql
 -- Logins: admin / admin123, every customer: customer123, every rider: rider123
 
 INSERT INTO admins (username, password_hash) VALUES

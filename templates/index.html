@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero p-4 p-md-5 mb-4">
+  <h1 class="h2">Track your parcel</h1>
+  <p class="mb-3">Enter the tracking number from your booking receipt.</p>
+  <form class="row g-2" action="{{ url_for('track') }}">
+    <div class="col-sm-8 col-md-6">
+      <label class="visually-hidden" for="tracking_no">Tracking number</label>
+      <input class="form-control form-control-lg" id="tracking_no" name="tracking_no"
+             placeholder="e.g. PT26110900077" required>
+    </div>
+    <div class="col-auto"><button class="btn btn-lg btn-light">Track</button></div>
+  </form>
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Delivery charges</div>
+      <table class="table mb-0">
+        <thead><tr><th>Service</th><th>Base rate</th><th>Per kg</th><th>Delivery time</th></tr></thead>
+        <tbody>
+        {% for s in services %}
+          <tr><td>{{ s.service_name }}</td><td>{{ s.base_rate|money }}</td><td>{{ s.rate_per_kg|money }}</td>
+              <td>{{ s.delivery_days }} day{{ 's' if s.delivery_days > 1 }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <div class="card-body text-muted small">Charge = base rate + rate per kg × weight.</div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Our branches ({{ branches|length }})</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Branch</th><th>City</th><th>Address</th><th>Phone</th></tr></thead>
+          <tbody>
+          {% for b in branches %}
+            <tr><td>{{ b.branch_name }}</td><td>{{ b.city }}</td><td>{{ b.address }}</td><td>{{ b.phone }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

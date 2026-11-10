@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Track parcel{% endblock %}
+{% block content %}
+<form class="row g-2 mb-4" action="{{ url_for('track') }}">
+  <div class="col-sm-6 col-md-4">
+    <label class="visually-hidden" for="tracking_no">Tracking number</label>
+    <input class="form-control" id="tracking_no" name="tracking_no" value="{{ tracking_no }}"
+           placeholder="Tracking number" required>
+  </div>
+  <div class="col-auto"><button class="btn btn-brand">Track</button></div>
+</form>
+
+{% if not parcel %}
+  <div class="alert alert-warning">No parcel found with tracking number <strong>{{ tracking_no }}</strong>.</div>
+{% else %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">{{ parcel.tracking_no }}</span>
+        <span class="badge text-bg-{{ parcel.current_status|badge }}">{{ parcel.current_status|label }}</span>
+      </div>
+      <dl class="card-body row mb-0">
+        <dt class="col-5">Sender</dt><dd class="col-7">{{ parcel.sender_name }}</dd>
+        <dt class="col-5">Receiver</dt><dd class="col-7">{{ parcel.receiver_name }}</dd>
+        <dt class="col-5">From</dt><dd class="col-7">{{ parcel.origin_branch }}</dd>
+        <dt class="col-5">To</dt><dd class="col-7">{{ parcel.destination_branch }}</dd>
+        <dt class="col-5">Service</dt><dd class="col-7">{{ parcel.service_name }}</dd>
+        <dt class="col-5">Weight</dt><dd class="col-7">{{ parcel.weight_kg }} kg</dd>
+        <dt class="col-5">Booked on</dt><dd class="col-7">{{ parcel.booking_date|dt }}</dd>
+        <dt class="col-5">Expected by</dt><dd class="col-7">{{ parcel.due_date|dt }}</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header fw-semibold">Tracking history</div>
+      <div class="card-body">
+        <ul class="timeline mb-0">
+        {% for e in events %}
+          <li>
+            <div class="fw-semibold">{{ e.status|label }}</div>
+            <div class="text-muted small">{{ e.event_time|dt }} · {{ e.branch_name }}, {{ e.city }}</div>
+            {% if e.remarks %}<div>{{ e.remarks }}</div>{% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

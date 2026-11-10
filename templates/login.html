@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card">
+      <div class="card-header fw-semibold">Log in</div>
+      <form class="card-body" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label" for="role">I am a</label>
+          <select class="form-select" id="role" name="role">
+            <option value="customer" data-hint="Email address">Customer</option>
+            <option value="rider" data-hint="Phone number">Rider</option>
+            <option value="admin" data-hint="Username">Admin</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="identifier" id="identifier-label">Email address</label>
+          <input class="form-control" id="identifier" name="identifier" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" type="password" id="password" name="password" required>
+        </div>
+        <button class="btn btn-brand w-100">Log in</button>
+        <p class="text-center small mt-3 mb-0">New customer? <a href="{{ url_for('register') }}">Create an account</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const role = document.getElementById('role');
+  const showHint = () => document.getElementById('identifier-label').textContent = role.selectedOptions[0].dataset.hint;
+  role.addEventListener('change', showHint);
+  showHint();
+</script>
+{% endblock %}

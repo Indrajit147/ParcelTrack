@@ -17,13 +17,13 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 ## M3 — Sample data
 - [x] Branches, service types, riders, customers and an admin account
 - [x] Parcels in every status with matching shipments, tracking events and payments
-- [x] Reference SQL queries (`db/queries.sql`)
+- [x] Reference SQL queries (`database/queries.sql`)
 
 ## M4 — Backend foundation
-- [ ] Flask app, database connection, one transaction per request
-- [ ] Login / logout for admin, customer and rider with hashed passwords
-- [ ] CSRF protection and friendly database error messages
-- [ ] Base layout and home page
+- [x] Flask app, database connection, one transaction per request
+- [x] Login / logout for admin, customer and rider with hashed passwords
+- [x] CSRF protection and friendly database error messages
+- [x] Base layout and home page
 
 ## M5 — Customer features
 - [ ] Register and update profile (INSERT, UPDATE)

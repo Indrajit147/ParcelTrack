@@ -1,5 +1,5 @@
 -- ParcelTrack database schema (PostgreSQL)
--- Run:  psql -U postgres -d parceltrack -f db/schema.sql
+-- Run:  psql -U postgres -d parceltrack -f database/schema.sql
 
 DROP VIEW IF EXISTS v_delayed_deliveries, v_branch_parcel_count, v_rider_deliveries, v_parcel_details;
 DROP TABLE IF EXISTS payments, tracking_events, shipments, parcels,

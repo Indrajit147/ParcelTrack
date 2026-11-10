@@ -8,14 +8,14 @@ JOIN customers c     ON c.customer_id = p.sender_id
 JOIN branches ob     ON ob.branch_id  = p.origin_branch_id
 JOIN branches db     ON db.branch_id  = p.destination_branch_id
 JOIN service_types s ON s.service_id  = p.service_id
-WHERE p.tracking_no = 'PT26100100001';
+WHERE p.tracking_no = 'PT26100200001';
 
 -- 2. Full tracking history of that parcel
 SELECT e.event_time, e.status, b.branch_name, e.remarks
 FROM tracking_events e
 JOIN parcels p  ON p.parcel_id = e.parcel_id
 JOIN branches b ON b.branch_id = e.branch_id
-WHERE p.tracking_no = 'PT26100100001'
+WHERE p.tracking_no = 'PT26100200001'
 ORDER BY e.event_time;
 
 -- 3. Delivery charge = base rate + rate per kg x weight (2.5 kg, Express)

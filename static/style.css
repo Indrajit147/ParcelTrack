@@ -1,0 +1,13 @@
+.bg-brand { background-color: #0b5d4b; }
+.btn-brand { background-color: #0b5d4b; border-color: #0b5d4b; color: #fff; }
+.btn-brand:hover, .btn-brand:focus { background-color: #084537; border-color: #084537; color: #fff; }
+.hero { background: linear-gradient(135deg, #0b5d4b, #14876e); color: #fff; border-radius: .75rem; }
+.stat { font-size: 1.75rem; font-weight: 700; }
+.timeline { list-style: none; padding-left: 0; border-left: 3px solid #0b5d4b; margin-left: .5rem; }
+.timeline li { position: relative; padding: 0 0 1.25rem 1.25rem; }
+.timeline li::before {
+  content: ""; position: absolute; left: -9px; top: 4px; width: 15px; height: 15px;
+  border-radius: 50%; background: #fff; border: 3px solid #0b5d4b;
+}
+.timeline li:first-child::before { background: #0b5d4b; }
+table td, table th { vertical-align: middle; }
