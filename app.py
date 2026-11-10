@@ -11,6 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import admin
 import customer
 import db
+import rider
 from ops import NEXT_STATUS, OpError, clean
 
 load_dotenv()
@@ -21,6 +22,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.teardown_request(db.close_db)
 app.register_blueprint(customer.bp)
 app.register_blueprint(admin.bp)
+app.register_blueprint(rider.bp)
 
 HOME = {'admin': '/admin/', 'customer': '/customer/', 'rider': '/rider/'}
 

@@ -39,8 +39,8 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Update parcel status and record payments
 
 ## M7 — Rider features
-- [ ] Task list for the logged-in rider
-- [ ] Update status of assigned parcels, cash-on-delivery collection
+- [x] Task list for the logged-in rider
+- [x] Update status of assigned parcels, cash-on-delivery collection
 
 ## M8 — Dashboard and reports
 - [ ] Dashboard counters (parcels, in transit, delivered, returned, riders on duty, revenue)
