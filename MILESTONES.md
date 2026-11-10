@@ -43,9 +43,9 @@ Stack: PostgreSQL, Python Flask, psycopg2 (raw SQL), HTML/CSS/JavaScript with Bo
 - [x] Update status of assigned parcels, cash-on-delivery collection
 
 ## M8 — Dashboard and reports
-- [ ] Dashboard counters (parcels, in transit, delivered, returned, riders on duty, revenue)
-- [ ] Revenue reports (SUM, GROUP BY)
-- [ ] Rider-wise deliveries, branch-wise parcel count, delayed deliveries, customer history
+- [x] Dashboard counters (parcels, in transit, delivered, returned, riders on duty, revenue)
+- [x] Revenue reports (SUM, GROUP BY)
+- [x] Rider-wise deliveries, branch-wise parcel count, delayed deliveries, customer history
 
 ## M9 — Testing and documentation
 - [ ] Automated end-to-end test of the main flows

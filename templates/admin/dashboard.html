@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  {% for label, value in [('Total parcels', s.total), ('In transit', s.in_transit), ('Delivered', s.delivered),
+                          ('Returned', s.returned), ('Riders on duty', s.riders_on_duty), ('Customers', s.customers)] %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-body h-100"><div class="text-muted small">{{ label }}</div><div class="stat">{{ value }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Revenue (paid)</div><div class="stat text-success">{{ s.revenue|money }}</div></div></div>
+  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Pending payments</div><div class="stat text-warning">{{ s.pending|money }}</div></div></div>
+  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Delayed, not yet delivered</div><div class="stat text-danger">{{ s.delayed_open }}</div></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header fw-semibold">Parcels by status</div>
+      <table class="table mb-0">
+        <tbody>
+        {% for row in by_status %}
+          <tr>
+            <td><a class="badge text-bg-{{ row.current_status|badge }} text-decoration-none"
+                   href="{{ url_for('admin.parcels', status=row.current_status) }}">{{ row.current_status|label }}</a></td>
+            <td class="w-50">
+              <div class="progress" role="progressbar" aria-label="{{ row.current_status|label }}"
+                   aria-valuenow="{{ row.count }}" aria-valuemin="0" aria-valuemax="{{ s.total }}">
+                <div class="progress-bar bg-{{ row.current_status|badge }}" style="width: {{ 100 * row.count / s.total }}%"></div>
+              </div>
+            </td>
+            <td class="text-end">{{ row.count }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header fw-semibold">Latest bookings</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Tracking no.</th><th>Sender</th><th>Route</th><th>Charge</th><th>Booked</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for p in recent %}
+            <tr>
+              <td><a href="{{ url_for('admin.parcel', parcel_id=p.parcel_id) }}">{{ p.tracking_no }}</a></td>
+              <td>{{ p.sender_name }}</td>
+              <td>{{ p.origin_branch }} → {{ p.destination_branch }}</td>
+              <td>{{ p.charge|money }}</td>
+              <td>{{ p.booking_date|dt }}</td>
+              <td><span class="badge text-bg-{{ p.current_status|badge }}">{{ p.current_status|label }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

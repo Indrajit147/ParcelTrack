@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% macro table(title, headers, rows, empty='No data.') %}
+<div class="card mb-4">
+  <div class="card-header fw-semibold">{{ title }}</div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {{ caller() }}
+        {% if not rows %}<tr><td colspan="{{ headers|length }}" class="text-center text-muted">{{ empty }}</td></tr>{% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endmacro %}
+{% block content %}
+<h1 class="h3 mb-3">Reports</h1>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    {% call table('Revenue by month', ['Month', 'Payments', 'Revenue'], revenue_month) %}
+      {% for r in revenue_month %}<tr><td>{{ r.month }}</td><td>{{ r.payments }}</td><td>{{ r.revenue|money }}</td></tr>{% endfor %}
+    {% endcall %}
+    {% call table('Revenue by service type', ['Service', 'Paid parcels', 'Revenue', 'Average'], revenue_service) %}
+      {% for r in revenue_service %}<tr><td>{{ r.service_name }}</td><td>{{ r.parcels }}</td><td>{{ r.revenue|money }}</td><td>{{ r.average|money }}</td></tr>{% endfor %}
+    {% endcall %}
+    {% call table('Payments by method', ['Method', 'Status', 'Payments', 'Amount'], revenue_method) %}
+      {% for r in revenue_method %}<tr><td>{{ r.payment_method|label }}</td>
+        <td><span class="badge text-bg-{{ r.payment_status|badge }}">{{ r.payment_status|label }}</span></td>
+        <td>{{ r.payments }}</td><td>{{ r.amount|money }}</td></tr>{% endfor %}
+    {% endcall %}
+    {% call table('Branch-wise parcel count', ['Branch', 'City', 'Sent', 'Received', 'Booked charge'], branches) %}
+      {% for r in branches %}<tr><td>{{ r.branch_name }}</td><td>{{ r.city }}</td><td>{{ r.parcels_sent }}</td>
+        <td>{{ r.parcels_received }}</td><td>{{ r.booked_charge|money }}</td></tr>{% endfor %}
+    {% endcall %}
+  </div>
+
+  <div class="col-lg-6">
+    {% call table('Rider-wise deliveries', ['Rider', 'Branch', 'Pickups', 'Deliveries', 'Open', 'Status'], riders) %}
+      {% for r in riders %}<tr><td>{{ r.full_name }}</td><td>{{ r.branch_name }}</td><td>{{ r.pickups_done }}</td>
+        <td>{{ r.deliveries_done }}</td><td>{{ r.open_tasks }}</td>
+        <td><span class="badge text-bg-{{ r.status|badge }}">{{ r.status|label }}</span></td></tr>{% endfor %}
+    {% endcall %}
+    {% call table('Customer parcel history', ['Customer', 'Parcels', 'Delivered', 'Total charge', 'Last booking'], customers) %}
+      {% for r in customers %}<tr>
+        <td><a href="{{ url_for('admin.parcels', q=r.email) }}">{{ r.full_name }}</a></td><td>{{ r.parcels }}</td>
+        <td>{{ r.delivered }}</td><td>{{ r.total_charge|money }}</td><td>{{ r.last_booking|dt }}</td></tr>{% endfor %}
+    {% endcall %}
+  </div>
+</div>
+
+{% call table('Delayed deliveries (' ~ delayed|length ~ ')',
+              ['Tracking no.', 'Sender', 'Route', 'Service', 'Status', 'Due', 'Delivered', 'Late by'], delayed,
+              'No delayed deliveries.') %}
+  {% for r in delayed %}<tr>
+    <td><a href="{{ url_for('admin.parcel', parcel_id=r.parcel_id) }}">{{ r.tracking_no }}</a></td>
+    <td>{{ r.sender_name }}</td><td>{{ r.origin_branch }} → {{ r.destination_branch }}</td><td>{{ r.service_name }}</td>
+    <td><span class="badge text-bg-{{ r.current_status|badge }}">{{ r.current_status|label }}</span></td>
+    <td>{{ r.due_date|dt }}</td><td>{{ r.delivered_at|dt }}</td>
+    <td>{{ r.late_by.days }}d {{ r.late_by.seconds // 3600 }}h</td></tr>{% endfor %}
+{% endcall %}
+{% endblock %}

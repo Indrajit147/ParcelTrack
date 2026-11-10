@@ -227,6 +227,50 @@ def parcel_delete(parcel_id):
     return redirect(url_for('admin.parcels'))
 
 
+# ---------- dashboard and reports ----------
+
 @bp.route('/')
 def dashboard():
-    return redirect(url_for('admin.parcels'))
+    summary = query_one(
+        """SELECT (SELECT COUNT(*) FROM parcels) AS total,
+                  (SELECT COUNT(*) FROM parcels WHERE current_status IN
+                          ('picked_up', 'in_transit', 'at_hub', 'out_for_delivery')) AS in_transit,
+                  (SELECT COUNT(*) FROM parcels WHERE current_status = 'delivered') AS delivered,
+                  (SELECT COUNT(*) FROM parcels WHERE current_status = 'returned') AS returned,
+                  (SELECT COUNT(*) FROM riders WHERE status <> 'inactive') AS riders_on_duty,
+                  (SELECT COUNT(*) FROM customers) AS customers,
+                  (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payment_status = 'paid') AS revenue,
+                  (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payment_status = 'pending') AS pending,
+                  (SELECT COUNT(*) FROM v_delayed_deliveries WHERE delivered_at IS NULL) AS delayed_open""")
+    by_status = query("SELECT current_status, COUNT(*) AS count FROM parcels GROUP BY current_status ORDER BY count DESC")
+    recent = query("SELECT * FROM v_parcel_details ORDER BY booking_date DESC LIMIT 8")
+    return render_template('admin/dashboard.html', s=summary, by_status=by_status, recent=recent)
+
+
+@bp.route('/reports')
+def reports():
+    return render_template(
+        'admin/reports.html',
+        revenue_month=query(
+            """SELECT to_char(payment_date, 'YYYY-MM') AS month, COUNT(*) AS payments, SUM(amount) AS revenue
+               FROM payments WHERE payment_status = 'paid' GROUP BY month ORDER BY month DESC"""),
+        revenue_service=query(
+            """SELECT s.service_name, COUNT(DISTINCT p.parcel_id) AS parcels, SUM(pay.amount) AS revenue,
+                      AVG(pay.amount) AS average
+               FROM payments pay
+               JOIN parcels p       ON p.parcel_id  = pay.parcel_id
+               JOIN service_types s ON s.service_id = p.service_id
+               WHERE pay.payment_status = 'paid'
+               GROUP BY s.service_name ORDER BY revenue DESC"""),
+        revenue_method=query(
+            """SELECT payment_method, payment_status, COUNT(*) AS payments, SUM(amount) AS amount
+               FROM payments GROUP BY payment_method, payment_status ORDER BY payment_method, payment_status"""),
+        riders=query("SELECT * FROM v_rider_deliveries ORDER BY deliveries_done DESC, pickups_done DESC, full_name"),
+        branches=query("SELECT * FROM v_branch_parcel_count ORDER BY parcels_sent + parcels_received DESC"),
+        delayed=query("SELECT * FROM v_delayed_deliveries ORDER BY delivered_at IS NULL DESC, late_by DESC"),
+        customers=query(
+            """SELECT c.customer_id, c.full_name, c.email, COUNT(p.parcel_id) AS parcels,
+                      COUNT(p.parcel_id) FILTER (WHERE p.current_status = 'delivered') AS delivered,
+                      COALESCE(SUM(p.charge), 0) AS total_charge, MAX(p.booking_date) AS last_booking
+               FROM customers c LEFT JOIN parcels p ON p.sender_id = c.customer_id
+               GROUP BY c.customer_id ORDER BY parcels DESC, c.full_name"""))
