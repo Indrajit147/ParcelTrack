@@ -17,7 +17,7 @@ def home():
         """SELECT COUNT(*) AS total,
                   COUNT(*) FILTER (WHERE current_status = 'delivered') AS delivered,
                   COUNT(*) FILTER (WHERE current_status NOT IN ('delivered', 'returned')) AS active,
-                  COALESCE(SUM(charge), 0) AS spent
+                  COALESCE(SUM(charge) FILTER (WHERE current_status NOT IN ('delivered', 'returned')), 0) AS spent
            FROM parcels WHERE sender_id = %s""", (session['uid'],))
     return render_template('customer/home.html', parcels=parcels, summary=summary)
 
