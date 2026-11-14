@@ -1,20 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Dashboard</h1>
+<h1 class="page-title">Dashboard</h1>
+<p class="page-sub">Overview of parcels, riders and payments across all branches.</p>
 
 <div class="row g-3 mb-4">
-  {% for label, value in [('Total parcels', s.total), ('In transit', s.in_transit), ('Delivered', s.delivered),
-                          ('Returned', s.returned), ('Riders on duty', s.riders_on_duty), ('Customers', s.customers)] %}
+  {% for label, value, icon in [('Total parcels', s.total, 'box-seam'), ('In transit', s.in_transit, 'truck'), ('Delivered', s.delivered, 'check2-circle'),
+                          ('Returned', s.returned, 'arrow-return-left'), ('Riders on duty', s.riders_on_duty, 'bicycle'), ('Customers', s.customers, 'people')] %}
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card card-body h-100"><div class="text-muted small">{{ label }}</div><div class="stat">{{ value }}</div></div>
+    <div class="card card-body h-100">
+      <div class="stat-icon mb-2"><i class="bi bi-{{ icon }}" aria-hidden="true"></i></div>
+      <div class="stat-label">{{ label }}</div><div class="stat">{{ value }}</div>
+    </div>
   </div>
   {% endfor %}
 </div>
 <div class="row g-3 mb-4">
-  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Revenue (paid)</div><div class="stat text-success">{{ s.revenue|money }}</div></div></div>
-  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Pending payments</div><div class="stat text-warning">{{ s.pending|money }}</div></div></div>
-  <div class="col-md-4"><div class="card card-body"><div class="text-muted small">Delayed, not yet delivered</div><div class="stat text-danger">{{ s.delayed_open }}</div></div></div>
+  <div class="col-md-4"><div class="card card-body stat-card"><div class="stat-icon"><i class="bi bi-cash-stack" aria-hidden="true"></i></div><div><div class="stat-label">Revenue (paid)</div><div class="stat text-success">{{ s.revenue|money }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-body stat-card"><div class="stat-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div><div><div class="stat-label">Pending payments</div><div class="stat text-warning">{{ s.pending|money }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-body stat-card"><div class="stat-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></div><div><div class="stat-label">Delayed, not yet delivered</div><div class="stat text-danger">{{ s.delayed_open }}</div></div></div></div>
 </div>
 
 <div class="row g-4">

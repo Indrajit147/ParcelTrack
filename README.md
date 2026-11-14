@@ -30,7 +30,7 @@ The work plan is in [MILESTONES.md](MILESTONES.md).
 Nine tables. Files are in [`database/`](database):
 
 - `schema.sql` — tables, constraints, indexes, trigger and views
-- `seed.sql` — sample data (15 branches, 32 riders, 25 customers, 77 parcels with their history)
+- `seed.sql` — sample data (50 branches, 25 riders, 36 customers, 77 parcels with their history)
 - `queries.sql` — the main queries of the project, runnable on their own
 
 ```mermaid
@@ -49,6 +49,7 @@ erDiagram
     CUSTOMERS {
         int customer_id PK
         varchar full_name
+        varchar username UK
         varchar email UK
         varchar phone
         text address
@@ -66,6 +67,7 @@ erDiagram
         int rider_id PK
         int branch_id FK
         varchar full_name
+        varchar username UK
         varchar phone UK
         varchar vehicle_type
         varchar status
@@ -165,8 +167,11 @@ Design points:
 | Role | Login | Password |
 |---|---|---|
 | Admin | `admin` | `admin123` |
-| Customer | `sajib.saha@outlook.com` (any customer email) | `customer123` |
-| Rider | `01709440470` (any rider phone) | `rider123` |
+| Customer | `indrajit` (any customer's username) | `customer123` |
+| Rider | `humayra` (any rider's username) | `rider123` |
+
+A username is the person's first name in lowercase, skipping "Md." and initials like "H.M."; a repeated name gets a number
+(`israt`, `israt2`). Admins can see and change usernames on the Customers and Riders pages.
 
 ## Project structure
 

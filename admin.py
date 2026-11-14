@@ -3,8 +3,8 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from werkzeug.security import generate_password_hash
 
 from db import query, query_one
-from ops import (NEXT_STATUS, PAYMENT_METHODS, STATUSES, OpError, assign_rider, book_parcel,
-                 change_status, clean, delete_parcel, require)
+from ops import (NEXT_STATUS, PARCEL_SORTS, PAYMENT_METHODS, STATUSES, OpError, assign_rider, book_parcel,
+                 change_status, clean, delete_parcel, pick_sort, require)
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 bp.before_request(require('admin'))
@@ -18,20 +18,28 @@ TABLES = {
         'title': 'Customers', 'pk': 'customer_id',
         'list_sql': """SELECT c.*, (SELECT COUNT(*) FROM parcels p WHERE p.sender_id = c.customer_id) AS parcels
                        FROM customers c""",
-        'search': ['full_name', 'email', 'phone', 'address'],
-        'columns': [('customer_id', 'ID'), ('full_name', 'Name'), ('email', 'Email'), ('phone', 'Phone'),
+        'search': ['full_name', 'username', 'email', 'phone', 'address'],
+        'sorts': {'newest': ('Newest first', 'created_at DESC'), 'oldest': ('Oldest first', 'created_at'),
+                  'name': ('Name (A-Z)', 'full_name'), 'name_desc': ('Name (Z-A)', 'full_name DESC'),
+                  'parcels': ('Most parcels', 'parcels DESC, full_name')},
+        'columns': [('customer_id', 'ID'), ('full_name', 'Name'), ('username', 'Username'), ('email', 'Email'), ('phone', 'Phone'),
                     ('address', 'Address'), ('parcels', 'Parcels'), ('created_at', 'Registered')],
-        'fields': [('full_name', 'Full name', 'text', None), ('email', 'Email', 'email', None),
+        'fields': [('full_name', 'Full name', 'text', None), ('username', 'Username', 'username', None),
+                   ('email', 'Email', 'email', None),
                    ('phone', 'Phone', 'text', None), ('address', 'Address', 'text', None),
                    ('password', 'Password', 'password', None)],
     },
     'riders': {
         'title': 'Riders', 'pk': 'rider_id',
         'list_sql': "SELECT r.*, b.branch_name FROM riders r JOIN branches b ON b.branch_id = r.branch_id",
-        'search': ['full_name', 'phone', 'branch_name', 'vehicle_type', 'status'],
-        'columns': [('rider_id', 'ID'), ('full_name', 'Name'), ('phone', 'Phone'), ('branch_name', 'Branch'),
+        'search': ['full_name', 'username', 'phone', 'branch_name', 'vehicle_type', 'status'],
+        'sorts': {'name': ('Name (A-Z)', 'full_name'), 'name_desc': ('Name (Z-A)', 'full_name DESC'),
+                  'newest': ('Newest first', 'rider_id DESC'), 'oldest': ('Oldest first', 'rider_id'),
+                  'branch': ('Branch', 'branch_name, full_name'), 'status': ('Status', 'status, full_name')},
+        'columns': [('rider_id', 'ID'), ('full_name', 'Name'), ('username', 'Username'), ('phone', 'Phone'), ('branch_name', 'Branch'),
                     ('vehicle_type', 'Vehicle'), ('status', 'Status')],
-        'fields': [('full_name', 'Full name', 'text', None), ('phone', 'Phone', 'text', None),
+        'fields': [('full_name', 'Full name', 'text', None), ('username', 'Username', 'username', None),
+                   ('phone', 'Phone', 'text', None),
                    ('branch_id', 'Branch', 'select', BRANCH_OPTIONS),
                    ('vehicle_type', 'Vehicle type', 'select', ['motorcycle', 'bicycle', 'van', 'truck']),
                    ('status', 'Status', 'select', ['available', 'busy', 'inactive']),
@@ -41,6 +49,9 @@ TABLES = {
         'title': 'Branches', 'pk': 'branch_id',
         'list_sql': "SELECT * FROM branches",
         'search': ['branch_name', 'city', 'address', 'phone'],
+        'sorts': {'name': ('Name (A-Z)', 'branch_name'), 'name_desc': ('Name (Z-A)', 'branch_name DESC'),
+                  'city': ('City', 'city, branch_name'),
+                  'newest': ('Newest first', 'branch_id DESC'), 'oldest': ('Oldest first', 'branch_id')},
         'columns': [('branch_id', 'ID'), ('branch_name', 'Branch'), ('city', 'City'), ('address', 'Address'),
                     ('phone', 'Phone')],
         'fields': [('branch_name', 'Branch name', 'text', None), ('city', 'City', 'text', None),
@@ -50,6 +61,8 @@ TABLES = {
         'title': 'Service types', 'pk': 'service_id',
         'list_sql': "SELECT * FROM service_types",
         'search': ['service_name'],
+        'sorts': {'price': ('Price: low to high', 'base_rate'), 'price_desc': ('Price: high to low', 'base_rate DESC'),
+                  'name': ('Name (A-Z)', 'service_name'), 'fastest': ('Fastest delivery', 'delivery_days, base_rate')},
         'columns': [('service_id', 'ID'), ('service_name', 'Service'), ('base_rate', 'Base rate (৳)'),
                     ('rate_per_kg', 'Rate per kg (৳)'), ('delivery_days', 'Delivery days')],
         'fields': [('service_name', 'Service name', 'text', None), ('base_rate', 'Base rate (৳)', 'number', None),
@@ -80,7 +93,7 @@ def form_values(cfg, creating):
         elif not raw:
             raise OpError(f'{label} is required.')
         else:
-            values[name] = raw.lower() if kind == 'email' else raw
+            values[name] = raw.lower() if kind in ('email', 'username') else raw
     return values
 
 
@@ -91,8 +104,9 @@ def manage(table):
     cfg = table_config(table)
     q = request.args.get('q', '').strip()
     where = ' OR '.join(f"{col}::text ILIKE %(q)s" for col in cfg['search'])
-    rows = query(f"SELECT * FROM ({cfg['list_sql']}) t WHERE {where} ORDER BY {cfg['pk']}", {'q': f'%{q}%'})
-    return render_template('admin/list.html', table=table, cfg=cfg, rows=rows, q=q)
+    sort, order = pick_sort(cfg['sorts'])
+    rows = query(f"SELECT * FROM ({cfg['list_sql']}) t WHERE {where} ORDER BY {order}, {cfg['pk']}", {'q': f'%{q}%'})
+    return render_template('admin/list.html', table=table, cfg=cfg, rows=rows, q=q, sort=sort)
 
 
 @bp.route('/manage/<table>/new', methods=['GET', 'POST'])
@@ -133,13 +147,15 @@ def delete(table, row_id):
 def parcels():
     q = request.args.get('q', '').strip()
     status = request.args.get('status', '')
+    sort, order = pick_sort(PARCEL_SORTS)
     rows = query(
         """SELECT * FROM v_parcel_details
            WHERE (tracking_no ILIKE %(q)s OR sender_name ILIKE %(q)s OR sender_email ILIKE %(q)s
                   OR receiver_name ILIKE %(q)s OR receiver_phone ILIKE %(q)s)
              AND (%(status)s = '' OR current_status = %(status)s)
-           ORDER BY booking_date DESC LIMIT 300""", {'q': f'%{q}%', 'status': status})
-    return render_template('admin/parcels.html', parcels=rows, q=q, status=status, statuses=STATUSES)
+           ORDER BY """ + order + ", parcel_id LIMIT 300", {'q': f'%{q}%', 'status': status})
+    return render_template('admin/parcels.html', parcels=rows, q=q, status=status, statuses=STATUSES,
+                           sort=sort, sorts=PARCEL_SORTS)
 
 
 @bp.route('/parcels/new', methods=['GET', 'POST'])

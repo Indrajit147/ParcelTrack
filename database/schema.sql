@@ -9,12 +9,14 @@ DROP SEQUENCE IF EXISTS tracking_seq;
 CREATE TABLE customers (
     customer_id   SERIAL PRIMARY KEY,
     full_name     VARCHAR(100) NOT NULL,
+    username      VARCHAR(30)  NOT NULL UNIQUE,
     email         VARCHAR(120) NOT NULL UNIQUE,
     phone         VARCHAR(15)  NOT NULL,
     address       TEXT         NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_customer_email CHECK (email LIKE '%_@_%._%')
+    CONSTRAINT chk_customer_email CHECK (email LIKE '%_@_%._%'),
+    CONSTRAINT chk_customer_username CHECK (username ~ '^[a-z0-9_]{2,30}$')
 );
 
 CREATE TABLE branches (
@@ -29,12 +31,14 @@ CREATE TABLE riders (
     rider_id      SERIAL PRIMARY KEY,
     branch_id     INT          NOT NULL REFERENCES branches (branch_id),
     full_name     VARCHAR(100) NOT NULL,
+    username      VARCHAR(30)  NOT NULL UNIQUE,
     phone         VARCHAR(15)  NOT NULL UNIQUE,
     vehicle_type  VARCHAR(20)  NOT NULL,
     status        VARCHAR(20)  NOT NULL DEFAULT 'available',
     password_hash VARCHAR(255) NOT NULL,
     CONSTRAINT chk_rider_vehicle CHECK (vehicle_type IN ('bicycle', 'motorcycle', 'van', 'truck')),
-    CONSTRAINT chk_rider_status  CHECK (status IN ('available', 'busy', 'inactive'))
+    CONSTRAINT chk_rider_status  CHECK (status IN ('available', 'busy', 'inactive')),
+    CONSTRAINT chk_rider_username CHECK (username ~ '^[a-z0-9_]{2,30}$')
 );
 
 CREATE TABLE service_types (

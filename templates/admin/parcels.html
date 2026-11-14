@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from '_sort.html' import sort_select %}
 {% block title %}Parcels{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -12,6 +13,7 @@
         <option value="">All statuses</option>
         {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s|label }}</option>{% endfor %}
       </select>
+      {{ sort_select(sorts, sort) }}
       <button class="btn btn-outline-secondary">Search</button>
     </form>
     <a class="btn btn-brand" href="{{ url_for('admin.parcel_new') }}">Book parcel</a>

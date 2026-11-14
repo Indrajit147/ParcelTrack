@@ -2,22 +2,39 @@
 {% block title %}Home{% endblock %}
 {% block content %}
 <section class="hero p-4 p-md-5 mb-4">
-  <h1 class="h2">Track your parcel</h1>
-  <p class="mb-3">Enter the tracking number from your booking receipt.</p>
+  <i class="bi bi-truck hero-icon d-none d-md-block" aria-hidden="true"></i>
+  <span class="badge rounded-pill bg-white bg-opacity-25 text-white mb-3">{{ branches|length }} branches nationwide</span>
+  <h1 class="mb-2">Where is my parcel?</h1>
+  <p class="lead mb-4">Enter the tracking number from your booking receipt to see every step of its journey.</p>
   <form class="row g-2" action="{{ url_for('track') }}">
     <div class="col-sm-8 col-md-6">
       <label class="visually-hidden" for="tracking_no">Tracking number</label>
-      <input class="form-control form-control-lg" id="tracking_no" name="tracking_no"
-             placeholder="e.g. PT26110900077" required>
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white border-0"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input class="form-control" id="tracking_no" name="tracking_no" placeholder="e.g. PT26110900077" required>
+      </div>
     </div>
-    <div class="col-auto"><button class="btn btn-lg btn-light">Track</button></div>
+    <div class="col-auto"><button class="btn btn-lg btn-light fw-semibold px-4">Track</button></div>
   </form>
 </section>
+
+<div class="row g-3 mb-4">
+  {% for icon, title, text in [('lightning-charge', 'Fast delivery', 'Same-city to nationwide, with express options.'),
+                               ('geo-alt', 'Live tracking', 'Every hand-off is logged with time and branch.'),
+                               ('cash-coin', 'Cash on delivery', 'Pay online or let the receiver pay at the door.')] %}
+  <div class="col-md-4">
+    <div class="card card-body h-100 feature">
+      <div class="stat-icon"><i class="bi bi-{{ icon }}" aria-hidden="true"></i></div>
+      <div><div class="fw-semibold">{{ title }}</div><div class="text-muted small">{{ text }}</div></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 
 <div class="row g-4">
   <div class="col-lg-5">
     <div class="card h-100">
-      <div class="card-header fw-semibold">Delivery charges</div>
+      <div class="card-header"><i class="bi bi-tags me-2 text-success" aria-hidden="true"></i>Delivery charges</div>
       <table class="table mb-0">
         <thead><tr><th>Service</th><th>Base rate</th><th>Per kg</th><th>Delivery time</th></tr></thead>
         <tbody>
@@ -27,12 +44,12 @@
         {% endfor %}
         </tbody>
       </table>
-      <div class="card-body text-muted small">Charge = base rate + rate per kg × weight.</div>
+      <div class="card-body text-muted small border-top"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Charge = base rate + rate per kg × weight.</div>
     </div>
   </div>
   <div class="col-lg-7">
     <div class="card h-100">
-      <div class="card-header fw-semibold">Our branches ({{ branches|length }})</div>
+      <div class="card-header"><i class="bi bi-building me-2 text-success" aria-hidden="true"></i>Our branches ({{ branches|length }})</div>
       <div class="table-responsive">
         <table class="table table-sm mb-0">
           <thead><tr><th>Branch</th><th>City</th><th>Address</th><th>Phone</th></tr></thead>

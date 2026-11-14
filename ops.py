@@ -3,7 +3,7 @@
 Each function runs several statements inside the request's transaction,
 so a failure in any step rolls the whole operation back.
 """
-from flask import flash, redirect, session, url_for
+from flask import flash, redirect, request, session, url_for
 
 from db import query, query_one
 
@@ -16,6 +16,27 @@ NEXT_STATUS = {
     'out_for_delivery': ['delivered', 'returned'],
 }
 PAYMENT_METHODS = ['cash_on_delivery', 'mobile_banking', 'card', 'cash']
+
+# Sort options for parcel lists: key in the URL -> (label, ORDER BY clause). The first one is the default.
+PARCEL_SORTS = {
+    'newest': ('Newest first', 'booking_date DESC'),
+    'oldest': ('Oldest first', 'booking_date'),
+    'sender': ('Sender name (A-Z)', 'sender_name, booking_date DESC'),
+    'receiver': ('Receiver name (A-Z)', 'receiver_name, booking_date DESC'),
+    'charge_high': ('Charge: high to low', 'charge DESC, booking_date DESC'),
+    'charge_low': ('Charge: low to high', 'charge, booking_date DESC'),
+    'heaviest': ('Weight: heaviest first', 'weight_kg DESC, booking_date DESC'),
+    'due': ('Due date: soonest first', 'due_date, booking_date'),
+}
+
+
+def pick_sort(options):
+    """Read ?sort= from the URL; returns (key, ORDER BY clause).
+    Only clauses written in the code above are ever used, never text from the request."""
+    key = request.args.get('sort', '')
+    if key not in options:
+        key = next(iter(options))
+    return key, options[key][1]
 
 
 class OpError(Exception):

@@ -11,6 +11,12 @@
           <label class="form-label" for="full_name">Full name</label>
           <input class="form-control" id="full_name" name="full_name" maxlength="100" value="{{ customer.full_name }}" required>
         </div>
+        <div class="mb-3">
+          <label class="form-label" for="username">Username</label>
+          <input class="form-control" id="username" name="username" maxlength="30" pattern="[A-Za-z0-9_]{2,30}" title="2-30 letters, digits or _"
+                 autocapitalize="none" value="{{ customer.username }}" required>
+          <div class="form-text">You log in with this. Lowercase letters, digits or _.</div>
+        </div>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label" for="email">Email</label>

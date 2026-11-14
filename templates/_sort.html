@@ -1,0 +1,9 @@
+{# "Sort by" dropdown; put it inside the page's GET form so search and filters are kept. #}
+{% macro sort_select(options, current) %}
+  <label class="visually-hidden" for="sort">Sort by</label>
+  <select class="form-select w-auto" id="sort" name="sort" onchange="this.form.submit()">
+    {% for key, option in options.items() %}
+      <option value="{{ key }}" {{ 'selected' if key == current }}>Sort: {{ option[0] }}</option>
+    {% endfor %}
+  </select>
+{% endmacro %}

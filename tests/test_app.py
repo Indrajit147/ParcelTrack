@@ -71,9 +71,10 @@ PARCEL = dict(receiver_name='Test Receiver', receiver_phone='01800000000', recei
               payment_method='cash_on_delivery')
 
 
-def new_customer(email):
+def new_customer(email, username=None):
     browser = Browser()
-    browser.page = browser.post('/register', full_name='Test Customer', email=email, phone='01700000000',
+    browser.page = browser.post('/register', full_name='Test Customer', username=username or email.split('@')[0],
+                 email=email, phone='01700000000',
                  address='KUET, Khulna', password='secret1')
     return browser
 
@@ -82,7 +83,8 @@ class PublicPages(unittest.TestCase):
     def test_home_and_tracking(self):
         b = Browser()
         self.assertIn('Delivery charges', b.get('/'))
-        tracking_no = sql("SELECT tracking_no FROM parcels WHERE current_status = 'delivered' LIMIT 1")[0]
+        # ORDER BY: without it Postgres may return a parcel another test just delivered (its note has no branch)
+        tracking_no = sql("SELECT tracking_no FROM parcels WHERE current_status = 'delivered' ORDER BY parcel_id LIMIT 1")[0]
         page = b.get('/track?tracking_no=' + tracking_no.lower())
         self.assertIn('Tracking history', page)
         self.assertIn('Parcel booked at', page)
@@ -114,15 +116,15 @@ class ParcelLifeCycle(unittest.TestCase):
         self.assertIn('Assign a pickup rider first', admin.post(url + '/status', status='picked_up'))
         self.assertIn('cannot be marked', admin.post(url + '/status', status='delivered'))
 
-        pickup_id, pickup_phone = sql("SELECT rider_id, phone FROM riders WHERE branch_id = 7 AND status <> 'inactive' LIMIT 1")
-        delivery_id, delivery_phone = sql("SELECT rider_id, phone FROM riders WHERE branch_id = 1 AND status <> 'inactive' LIMIT 1")
+        pickup_id, pickup_user = sql("SELECT rider_id, username FROM riders WHERE branch_id = 7 AND status <> 'inactive' LIMIT 1")
+        delivery_id, delivery_user = sql("SELECT rider_id, username FROM riders WHERE branch_id = 1 AND status <> 'inactive' LIMIT 1")
         self.assertIn('Choose an active rider', admin.post(url + '/assign', rider_id=delivery_id))
         self.assertIn('Rider assigned for pickup', admin.post(url + '/assign', rider_id=pickup_id))
         self.assertEqual(sql("SELECT status FROM riders WHERE rider_id = %s", (pickup_id,))[0], 'busy')
 
-        other_rider = Browser('rider', delivery_phone, 'rider123')
+        other_rider = Browser('rider', delivery_user, 'rider123')
         self.assertIn('not assigned to you', other_rider.post(f'/rider/update/{parcel_id}', status='picked_up'))
-        pickup_rider = Browser('rider', pickup_phone, 'rider123')
+        pickup_rider = Browser('rider', pickup_user, 'rider123')
         self.assertIn(tracking_no, pickup_rider.get('/rider/'))
         self.assertIn('Status updated', pickup_rider.post(f'/rider/update/{parcel_id}', status='picked_up'))
 
@@ -152,8 +154,13 @@ class ParcelLifeCycle(unittest.TestCase):
     def test_database_constraints_reach_the_user(self):
         customer = new_customer('rules@example.com')
         self.assertIn('Weight must be greater than 0', customer.post('/customer/book', **{**PARCEL, 'weight_kg': '-1'}))
-        self.assertIn('already registered', new_customer('rules@example.com').page)
-        self.assertIn('Profile updated', customer.post('/customer/profile', full_name='New Name', email='rules@example.com',
+        self.assertIn('already registered', new_customer('rules@example.com', 'rules_other').page)
+        self.assertIn('already taken', new_customer('other@example.com', 'rules').page)
+        self.assertIn('Username can use only', new_customer('bad@example.com', 'bad name').page)
+        self.assertIn('Wrong login details', Browser('customer', 'rules@example.com', 'secret1').page)  # email no longer logs in
+        self.assertIn('Log out', Browser('customer', 'RULES', 'secret1').page)  # username is not case-sensitive
+        self.assertIn('Log out', Browser('rider', 'humayra', 'rider123').page)  # seeded rider username
+        self.assertIn('Profile updated', customer.post('/customer/profile', full_name='New Name', username='rules', email='rules@example.com',
                                                        phone='01711111111', address='Khulna'))
 
 
@@ -182,6 +189,21 @@ class AdminPages(unittest.TestCase):
         for title in ('Revenue by month', 'Rider-wise deliveries', 'Branch-wise parcel count',
                       'Delayed deliveries', 'Customer parcel history'):
             self.assertIn(title, reports)
+
+    def test_sorting(self):
+        from admin import TABLES
+        from ops import PARCEL_SORTS
+        for table, cfg in TABLES.items():
+            for key in cfg['sorts']:
+                self.assertIn(f'value="{key}" selected', self.admin.get(f'/admin/manage/{table}?sort={key}'))
+        for key in PARCEL_SORTS:
+            self.assertIn(f'value="{key}" selected', self.admin.get(f'/admin/parcels?sort={key}'))
+        # unknown keys never reach the SQL: the page falls back to the default order
+        self.assertIn('value="newest" selected', self.admin.get('/admin/parcels?sort=charge;DROP TABLE parcels'))
+        # the rows really come back in the chosen order
+        charges = [float(c.replace(',', '')) for c in re.findall(r'৳([\d,]+\.\d\d)', self.admin.get('/admin/parcels?sort=charge_high'))]
+        self.assertGreater(len(charges), 10)
+        self.assertEqual(charges, sorted(charges, reverse=True))
 
     def test_record_payment(self):
         parcel_id, payment_id = sql("SELECT parcel_id, payment_id FROM payments WHERE payment_status = 'pending' LIMIT 1")

@@ -1,23 +1,30 @@
 {% extends 'base.html' %}
 {% block title %}Track parcel{% endblock %}
 {% block content %}
+<h1 class="page-title">Track a parcel</h1>
+<p class="page-sub">Enter a tracking number to see where the parcel is.</p>
 <form class="row g-2 mb-4" action="{{ url_for('track') }}">
-  <div class="col-sm-6 col-md-4">
+  <div class="col-sm-7 col-md-5">
     <label class="visually-hidden" for="tracking_no">Tracking number</label>
-    <input class="form-control" id="tracking_no" name="tracking_no" value="{{ tracking_no }}"
-           placeholder="Tracking number" required>
+    <div class="input-group">
+      <span class="input-group-text bg-white"><i class="bi bi-search" aria-hidden="true"></i></span>
+      <input class="form-control" id="tracking_no" name="tracking_no" value="{{ tracking_no }}"
+             placeholder="e.g. PT26110900077" required>
+    </div>
   </div>
-  <div class="col-auto"><button class="btn btn-brand">Track</button></div>
+  <div class="col-auto"><button class="btn btn-brand px-4">Track</button></div>
 </form>
 
-{% if not parcel %}
-  <div class="alert alert-warning">No parcel found with tracking number <strong>{{ tracking_no }}</strong>.</div>
+{% if not tracking_no %}
+{% elif not parcel %}
+  <div class="alert alert-warning d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    <div>No parcel found with tracking number <strong>{{ tracking_no }}</strong>.</div></div>
 {% else %}
 <div class="row g-4">
   <div class="col-lg-5">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold">{{ parcel.tracking_no }}</span>
+        <span class="fw-semibold"><i class="bi bi-box-seam me-2 text-success" aria-hidden="true"></i>{{ parcel.tracking_no }}</span>
         <span class="badge text-bg-{{ parcel.current_status|badge }}">{{ parcel.current_status|label }}</span>
       </div>
       <dl class="card-body row mb-0">
@@ -34,7 +41,7 @@
   </div>
   <div class="col-lg-7">
     <div class="card">
-      <div class="card-header fw-semibold">Tracking history</div>
+      <div class="card-header"><i class="bi bi-clock-history me-2 text-success" aria-hidden="true"></i>Tracking history</div>
       <div class="card-body">
         <ul class="timeline mb-0">
         {% for e in events %}

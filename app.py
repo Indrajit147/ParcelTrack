@@ -28,14 +28,18 @@ HOME = {'admin': '/admin/', 'customer': '/customer/', 'rider': '/rider/'}
 
 # who logs in with what
 LOGIN_SQL = {
-    'customer': "SELECT customer_id AS id, full_name AS name, password_hash FROM customers WHERE email = %s",
-    'rider': "SELECT rider_id AS id, full_name AS name, password_hash FROM riders WHERE phone = %s AND status <> 'inactive'",
+    'customer': "SELECT customer_id AS id, full_name AS name, password_hash FROM customers WHERE username = %s",
+    'rider': "SELECT rider_id AS id, full_name AS name, password_hash FROM riders WHERE username = %s AND status <> 'inactive'",
     'admin': "SELECT admin_id AS id, username AS name, password_hash FROM admins WHERE username = %s",
 }
 
 # friendly text for constraint violations reported by PostgreSQL
 DB_MESSAGES = {
     'customers_email_key': 'This email address is already registered.',
+    'customers_username_key': 'This username is already taken.',
+    'riders_username_key': 'Another rider already uses this username.',
+    'chk_customer_username': 'Username can use only lowercase letters, digits and _ (2-30 characters).',
+    'chk_rider_username': 'Username can use only lowercase letters, digits and _ (2-30 characters).',
     'chk_customer_email': 'Please enter a valid email address.',
     'riders_phone_key': 'Another rider already uses this phone number.',
     'branches_branch_name_key': 'A branch with this name already exists.',
@@ -119,7 +123,7 @@ def login():
     if request.method == 'POST':
         role = request.form.get('role')
         identifier = request.form.get('identifier', '').strip()
-        if role == 'customer':
+        if role in ('customer', 'rider'):
             identifier = identifier.lower()
         user = db.query_one(LOGIN_SQL[role], (identifier,)) if role in LOGIN_SQL else None
         if user and check_password_hash(user['password_hash'], request.form.get('password', '')):
@@ -139,13 +143,13 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        f = clean(request.form, 'full_name', 'email', 'phone', 'address', 'password')
+        f = clean(request.form, 'full_name', 'username', 'email', 'phone', 'address', 'password')
         if len(f['password']) < 6:
             raise OpError('Password must be at least 6 characters.')
         user = db.query_one(
-            """INSERT INTO customers (full_name, email, phone, address, password_hash)
-               VALUES (%s, %s, %s, %s, %s) RETURNING customer_id""",
-            (f['full_name'], f['email'].lower(), f['phone'], f['address'], generate_password_hash(f['password'])))
+            """INSERT INTO customers (full_name, username, email, phone, address, password_hash)
+               VALUES (%s, %s, %s, %s, %s, %s) RETURNING customer_id""",
+            (f['full_name'], f['username'].lower(), f['email'].lower(), f['phone'], f['address'], generate_password_hash(f['password'])))
         session.clear()
         session.update(role='customer', uid=user['customer_id'], name=f['full_name'])
         flash('Account created. You can book your first parcel now.', 'success')

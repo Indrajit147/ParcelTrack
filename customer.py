@@ -3,7 +3,10 @@ from flask import Blueprint, flash, redirect, render_template, request, session,
 from werkzeug.security import generate_password_hash
 
 from db import query, query_one
-from ops import PAYMENT_METHODS, OpError, book_parcel, clean, delete_parcel, require
+from ops import PARCEL_SORTS, PAYMENT_METHODS, OpError, book_parcel, clean, delete_parcel, pick_sort, require
+
+# every parcel on this page has the same sender, so sorting by sender is left out
+MY_PARCEL_SORTS = {k: v for k, v in PARCEL_SORTS.items() if k != 'sender'}
 
 bp = Blueprint('customer', __name__, url_prefix='/customer')
 bp.before_request(require('customer'))
@@ -11,7 +14,8 @@ bp.before_request(require('customer'))
 
 @bp.route('/')
 def home():
-    parcels = query("SELECT * FROM v_parcel_details WHERE sender_id = %s ORDER BY booking_date DESC",
+    sort, order = pick_sort(MY_PARCEL_SORTS)
+    parcels = query(f"SELECT * FROM v_parcel_details WHERE sender_id = %s ORDER BY {order}, parcel_id",
                     (session['uid'],))
     summary = query_one(
         """SELECT COUNT(*) AS total,
@@ -19,7 +23,7 @@ def home():
                   COUNT(*) FILTER (WHERE current_status NOT IN ('delivered', 'returned')) AS active,
                   COALESCE(SUM(charge) FILTER (WHERE current_status NOT IN ('delivered', 'returned')), 0) AS spent
            FROM parcels WHERE sender_id = %s""", (session['uid'],))
-    return render_template('customer/home.html', parcels=parcels, summary=summary)
+    return render_template('customer/home.html', parcels=parcels, summary=summary, sort=sort, sorts=MY_PARCEL_SORTS)
 
 
 @bp.route('/book', methods=['GET', 'POST'])
@@ -45,9 +49,10 @@ def cancel(parcel_id):
 @bp.route('/profile', methods=['GET', 'POST'])
 def profile():
     if request.method == 'POST':
-        f = clean(request.form, 'full_name', 'email', 'phone', 'address')
-        query("UPDATE customers SET full_name = %s, email = %s, phone = %s, address = %s WHERE customer_id = %s",
-              (f['full_name'], f['email'].lower(), f['phone'], f['address'], session['uid']))
+        f = clean(request.form, 'full_name', 'username', 'email', 'phone', 'address')
+        query("""UPDATE customers SET full_name = %s, username = %s, email = %s, phone = %s, address = %s
+                 WHERE customer_id = %s""",
+              (f['full_name'], f['username'].lower(), f['email'].lower(), f['phone'], f['address'], session['uid']))
         password = request.form.get('password', '')
         if password:
             if len(password) < 6:
